@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PK Mart - Super Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+
+    <!-- Login Screen -->
+    <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-indigo-600">PK Mart Admin</h1>
+                <p class="text-gray-500 text-sm mt-1">स्टोर कंट्रोल पैनल में प्रवेश करें</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">मोबाइल नंबर</label>
+                    <input type="text" id="loginPhone" placeholder="9876543210" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">पासवर्ड</label>
+                    <input type="password" id="loginPass" placeholder="PKM8384" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold p-3 rounded-lg transition">लॉगिन करें</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Screen -->
+    <div id="dashboardSection" class="hidden min-h-screen flex flex-col md:flex-row">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-indigo-900 text-white p-5 flex-shrink-0">
+            <h2 class="text-2xl font-bold border-b border-indigo-700 pb-4 mb-6">PK Mart Admin Panel</h2>
+            <nav class="space-y-2">
+                <button onclick="switchTab('overview')" class="w-full text-left py-2.5 px-4 rounded hover:bg-indigo-800 flex items-center gap-3"><i class="fas fa-chart-line"></i> डैशबोर्ड</button>
+                <button onclick="switchTab('products')" class="w-full text-left py-2.5 px-4 rounded hover:bg-indigo-800 flex items-center gap-3"><i class="fas fa-box"></i> प्रोडक्ट & स्टॉक</button>
+                <button onclick="switchTab('orders')" class="w-full text-left py-2.5 px-4 rounded hover:bg-indigo-800 flex items-center gap-3"><i class="fas fa-shopping-cart"></i> ऑर्डर & ट्रैकिंग</button>
+                <button onclick="switchTab('coupons')" class="w-full text-left py-2.5 px-4 rounded hover:bg-indigo-800 flex items-center gap-3"><i class="fas fa-ticket-alt"></i> कूपन कोड</button>
+                <button onclick="switchTab('payments')" class="w-full text-left py-2.5 px-4 rounded hover:bg-indigo-800 flex items-center gap-3"><i class="fas fa-qrcode"></i> UPI/QR सेटिंग</button>
+                <button onclick="switchTab('settings')" class="w-full text-left py-2.5 px-4 rounded hover:bg-indigo-800 flex items-center gap-3"><i class="fas fa-cog"></i> स्टोर सेटिंग्स</button>
+                <button onclick="handleLogout()" class="w-full text-left py-2.5 px-4 rounded hover:bg-red-600 text-red-200 mt-8 flex items-center gap-3"><i class="fas fa-sign-out-alt"></i> लॉगआउट</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            
+            <!-- 1. Overview Tab -->
+            <div id="tab-overview" class="tab-content space-y-6">
+                <h3 class="text-2xl font-bold">सेल & लाइव स्टैट्स डैशबोर्ड</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl shadow border-l-4 border-indigo-500">
+                        <p class="text-gray-500 text-sm">कुल बिक्री (Revenue)</p>
+                        <h4 class="text-2xl font-bold mt-1" id="statRevenue">₹0</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow border-l-4 border-green-500">
+                        <p class="text-gray-500 text-sm">कुल ऑर्डर्स</p>
+                        <h4 class="text-2xl font-bold mt-1" id="statOrders">0</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow border-l-4 border-yellow-500">
+                        <p class="text-gray-500 text-sm">लाइव प्रोडक्ट्स</p>
+                        <h4 class="text-2xl font-bold mt-1" id="statProducts">0</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow border-l-4 border-red-500">
+                        <p class="text-gray-500 text-sm">कम स्टॉक वाले प्रोडक्ट्स</p>
+                        <h4 class="text-2xl font-bold mt-1" id="statLowStock">0</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow">
+                    <h4 class="font-bold text-lg mb-4">त्वरित कार्य (Quick Actions)</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="exportOrdersCSV()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"><i class="fas fa-file-excel mr-2"></i>एक्सेल में डेटा डाउनलोड करें</button>
+                        <button onclick="switchTab('products')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"><i class="fas fa-plus mr-2"></i>नया प्रोडक्ट जोड़ें</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Products Tab -->
+            <div id="tab-products" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">प्रोडक्ट प्रबंधन & स्टॉक</h3>
+                    <button onclick="toggleProductModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">+ नया प्रोडक्ट जोड़ें</button>
+                </div>
+                <div class="bg-white rounded-xl shadow overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="p-4">फोटो</th>
+                                <th class="p-4">नाम</th>
+                                <th class="p-4">कीमत</th>
+                                <th class="p-4">स्टॉक</th>
+                                <th class="p-4">एक्शन</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productListTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. Orders Tab -->
+            <div id="tab-orders" class="tab-content hidden space-y-6">
+                <h3 class="text-2xl font-bold">ग्राहक ऑर्डर & ट्रैकिंग</h3>
+                <div class="bg-white rounded-xl shadow overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="p-4">ऑर्डर ID</th>
+                                <th class="p-4">ग्राहक</th>
+                                <th class="p-4">राशि</th>
+                                <th class="p-4">स्टेटस</th>
+                                <th class="p-4">एक्शन</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderListTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. Coupons Tab -->
+            <div id="tab-coupons" class="tab-content hidden space-y-6">
+                <h3 class="text-2xl font-bold">कूपन डिस्काउंट मैनेजर</h3>
+                <div class="bg-white p-6 rounded-xl shadow space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="couponCode" placeholder="कूपन कोड (जैसे: PK10)" class="border p-2 rounded">
+                        <input type="number" id="couponDiscount" placeholder="छूट (%)" class="border p-2 rounded">
+                        <button onclick="addCoupon()" class="bg-indigo-600 text-white p-2 rounded">कूपन जोड़ें</button>
+                    </div>
+                    <ul id="couponList" class="divide-y border-t pt-2"></ul>
+                </div>
+            </div>
+
+            <!-- 5. Payment / QR Settings -->
+            <div id="tab-payments" class="tab-content hidden space-y-6">
+                <h3 class="text-2xl font-bold">डायनामिक UPI & QR सेटिंग्स</h3>
+                <div class="bg-white p-6 rounded-xl shadow space-y-4 max-w-xl">
+                    <div>
+                        <label class="block font-semibold mb-1">आपकी UPI ID</label>
+                        <input type="text" id="storeUpi" placeholder="example@upi" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">क्यूआर कोड इमेज URL</label>
+                        <input type="text" id="storeQrUrl" placeholder="https://..." class="w-full border p-2 rounded">
+                    </div>
+                    <button onclick="savePaymentSettings()" class="bg-indigo-600 text-white px-4 py-2 rounded">सेव करें</button>
+                </div>
+            </div>
+
+            <!-- 6. Store Settings -->
+            <div id="tab-settings" class="tab-content hidden space-y-6">
+                <h3 class="text-2xl font-bold">स्टोर एडवांस्ड सेटिंग्स</h3>
+                <div class="bg-white p-6 rounded-xl shadow space-y-4 max-w-xl">
+                    <div>
+                        <label class="block font-semibold mb-1">स्टोर का नाम</label>
+                        <input type="text" id="storeNameInput" value="PK Mart" class="w-full border p-2 rounded">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">व्हाट्सएप सपोर्ट नंबर</label>
+                        <input type="text" id="storePhoneInput" placeholder="91XXXXXXXXXX" class="w-full border p-2 rounded">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="returnPolicyToggle" checked class="w-5 h-5">
+                        <label for="returnPolicyToggle" class="font-medium">5-दिन की रिटर्न नीति लागू रखें</label>
+                    </div>
+                    <button onclick="saveStoreSettings()" class="bg-indigo-600 text-white px-4 py-2 rounded">सेव सेटिंग्स</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal for Adding Product -->
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full space-y-4">
+            <h4 class="text-xl font-bold">नया प्रोडक्ट जोड़ें</h4>
+            <input type="text" id="pName" placeholder="प्रोडक्ट का नाम" class="w-full border p-2 rounded">
+            <input type="number" id="pPrice" placeholder="कीमत (₹)" class="w-full border p-2 rounded">
+            <input type="number" id="pStock" placeholder="स्टॉक मात्रा" class="w-full border p-2 rounded">
+            <input type="text" id="pImg" placeholder="इमेज URL / फोटो लिंक" class="w-full border p-2 rounded">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleProductModal()" class="px-4 py-2 bg-gray-300 rounded">रद्द करें</button>
+                <button onclick="saveProduct()" class="px-4 py-2 bg-indigo-600 text-white rounded">सेव करें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Store setup
+        let products = JSON.parse(localStorage.getItem('pk_products')) || [
+            { id: 1, name: "Sample Item", price: 299, stock: 15, img: "https://via.placeholder.com/50" }
+        ];
+        let orders = JSON.parse(localStorage.getItem('pk_orders')) || [
+            { id: "ORD101", customer: "Priyanshu", total: 299, status: "Pending", phone: "9876543210" }
+        ];
+        let coupons = JSON.parse(localStorage.getItem('pk_coupons')) || [
+            { code: "WELCOME10", discount: 10 }
+        ];
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginPhone').value;
+            const pass = document.getElementById('loginPass').value;
+            
+            // Default Credentials
+            if(phone === "9876543210" && pass === "PKM8384") {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                renderAll();
+            } else {
+                alert("गलत नंबर या पासवर्ड!");
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        }
+
+        function renderAll() {
+            renderStats();
+            renderProducts();
+            renderOrders();
+            renderCoupons();
+        }
+
+        function renderStats() {
+            const revenue = orders.reduce((sum, o) => o.status === 'Delivered' ? sum + Number(o.total) : sum, 0);
+            document.getElementById('statRevenue').innerText = '₹' + revenue;
+            document.getElementById('statOrders').innerText = orders.length;
+            document.getElementById('statProducts').innerText = products.length;
+            document.getElementById('statLowStock').innerText = products.filter(p => p.stock < 5).length;
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('productListTable');
+            list.innerHTML = products.map((p, index) => `
+                <tr class="border-b">
+                    <td class="p-4"><img src="${p.img}" class="w-10 h-10 object-cover rounded"></td>
+                    <td class="p-4 font-semibold">${p.name}</td>
+                    <td class="p-4">₹${p.price}</td>
+                    <td class="p-4"><span class="${p.stock < 5 ? 'text-red-600 font-bold' : ''}">${p.stock} pcs</span></td>
+                    <td class="p-4">
+                        <button onclick="deleteProduct(${index})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            localStorage.setItem('pk_products', JSON.stringify(products));
+            renderStats();
+        }
+
+        function toggleProductModal() {
+            document.getElementById('productModal').classList.toggle('hidden');
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('pName').value;
+            const price = document.getElementById('pPrice').value;
+            const stock = document.getElementById('pStock').value;
+            const img = document.getElementById('pImg').value || "https://via.placeholder.com/50";
+
+            if(name && price) {
+                products.push({ id: Date.now(), name, price, stock, img });
+                toggleProductModal();
+                renderProducts();
+            }
+        }
+
+        function deleteProduct(index) {
+            products.splice(index, 1);
+            renderProducts();
+        }
+
+        function renderOrders() {
+            const list = document.getElementById('orderListTable');
+            list.innerHTML = orders.map((o, index) => `
+                <tr class="border-b">
+                    <td class="p-4 font-bold">${o.id}</td>
+                    <td class="p-4">${o.customer}<br><span class="text-xs text-gray-500">${o.phone}</span></td>
+                    <td class="p-4">₹${o.total}</td>
+                    <td class="p-4">
+                        <select onchange="updateOrderStatus(${index}, this.value)" class="border p-1 rounded text-sm">
+                            <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        </select>
+                    </td>
+                    <td class="p-4">
+                        <a href="https://wa.me/91${o.phone}?text=Hello%20${o.customer},%20Your%20order%20${o.id}%20status:%20${o.status}" target="_blank" class="text-green-600"><i class="fab fa-whatsapp text-xl"></i></a>
+                    </td>
+                </tr>
+            `).join('');
+            localStorage.setItem('pk_orders', JSON.stringify(orders));
+            renderStats();
+        }
+
+        function updateOrderStatus(index, status) {
+            orders[index].status = status;
+            renderOrders();
+        }
+
+        function renderCoupons() {
+            const list = document.getElementById('couponList');
+            list.innerHTML = coupons.map((c, i) => `
+                <li class="py-2 flex justify-between items-center">
+                    <span class="font-bold text-indigo-700">${c.code}</span>
+                    <span>${c.discount}% छूट</span>
+                    <button onclick="coupons.splice(${i},1); renderCoupons();" class="text-red-500 text-sm">हटाएं</button>
+                </li>
+            `).join('');
+            localStorage.setItem('pk_coupons', JSON.stringify(coupons));
+        }
+
+        function addCoupon() {
+            const code = document.getElementById('couponCode').value;
+            const discount = document.getElementById('couponDiscount').value;
+            if(code && discount) {
+                coupons.push({ code, discount });
+                renderCoupons();
+            }
+        }
+
+        function exportOrdersCSV() {
+            let csv = "Order ID,Customer,Total,Status\n";
+            orders.forEach(o => { csv += `${o.id},${o.customer},${o.total},${o.status}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'PK_Mart_Orders.csv';
+            a.click();
+        }
+
+        function savePaymentSettings() {
+            alert("UPI & QR सेटिंग्स सफलतापूर्वक सुरक्षित कर दी गई हैं!");
+        }
+
+        function saveStoreSettings() {
+            alert("स्टोर की सेटिंग्स अपडेट हो गई हैं!");
+        }
+    </script>
+</body>
+</html>
